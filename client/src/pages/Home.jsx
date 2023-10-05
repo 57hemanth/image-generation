@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Card, FormField } from "../components"
+import { Card, FormField, Loader } from "../components"
 
 export default function Home() {
 
@@ -21,17 +21,25 @@ export default function Home() {
     const [searchText, setSearchText] = useState("")
     const [searchedPosts, setSearchedPosts] = useState([])
     const URL = import.meta.env.VITE_API_URL
+    const [loading, setLoading] = useState(false)
 
     useEffect(() => {
         const getPosts = async () => {
-            const response = await fetch(`${URL}/posts`, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json"
-                }
-            })
-            const posts = await response.json()
-            setPosts(posts)
+            try {
+                setLoading(true)
+                const response = await fetch(`${URL}/posts`, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                })
+                const posts = await response.json()
+                setPosts(posts)
+            } catch (error) {
+                console.log(error)
+            } finally {
+                setLoading(false)
+            }
         }
 
         getPosts()
@@ -57,11 +65,13 @@ export default function Home() {
                 <FormField name="search" type="text" labelName="Search" placeholder="Search posts" value={searchText} handleChange={handleSearch} />
             </div>
             { searchText && <p className="text-gray-500">Showing search results for <span className="font-bold">{searchText}</span></p>}
-            <div className="flex flex-row flex-wrap gap-4">
-                {searchText ? (
-                    <RenderCard data={searchedPosts} title={"No results found"} />
-                ): ( <RenderCard data={posts} title={"No posts found"} /> )}
-            </div>
+            {loading ? <Loader /> : 
+                <div className="flex flex-row flex-wrap gap-4">
+                    {searchText ? (
+                        <RenderCard data={searchedPosts} title={"No results found"} />
+                    ): ( <RenderCard data={posts} title={"No posts found"} /> )}
+                </div>
+            }
         </section>
     )
 }
